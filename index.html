@@ -1,20 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terremotos España | Monitor IGN</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="/static/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noruf-Labs | Monitor Sísmico</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root{--bg-color:#0d1117;--card-bg:#161b22;--accent-red:#ff4d4d;--accent-blue:#58a6ff;--text-main:#f0f6fc;--text-sub:#8b949e;--border-color:#30363d}*{box-sizing:border-box}body{background:var(--bg-color);color:var(--text-main);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:12px;max-width:920px;margin-inline:auto}header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 16px;border-bottom:1px solid var(--border-color);margin-bottom:16px}.brand{font-size:1.3rem;font-weight:800;letter-spacing:.5px;color:#fff}.brand span{color:var(--accent-red)}.region-badge{background:#21262d;color:var(--accent-blue);padding:4px 10px;border-radius:12px;font-size:.75rem;font-weight:600;border:1px solid var(--border-color)}.title-section h1{font-size:1.6rem;margin:0 0 4px;color:var(--text-main)}.title-section p{color:var(--text-sub);font-size:.85rem;margin:0 0 12px}.status-card{background:#1c2128;border:1px solid var(--border-color);border-left:4px solid var(--accent-blue);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.85rem;color:#fff}.status-card strong{color:var(--accent-blue)}.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}.stat-card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:10px}.stat-card .label{font-size:.7rem;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px}.stat-card .value{font-size:1.3rem;font-weight:bold;margin:4px 0 2px}.stat-card .sub{font-size:.7rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.section-header{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--text-main)}.events-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}.event-item{background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between}.event-mag{background:#2b1d1d;color:var(--accent-red);font-size:1.2rem;font-weight:bold;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,77,77,.3);min-width:40px;text-align:center}.event-info{flex-grow:1;margin-left:12px;min-width:0}.event-loc{font-size:.9rem;font-weight:600;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.event-meta{font-size:.75rem;color:var(--text-sub);margin-top:2px}.empty{color:var(--text-sub);padding:18px;text-align:center;border:1px dashed var(--border-color);border-radius:8px}#map{height:320px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:24px}@media(max-width:520px){body{padding:10px}.region-badge{font-size:.65rem}.title-section h1{font-size:1.4rem}}
+    </style>
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><span>TERREMOTOS<br><b>ESPAÑA</b></span></div><div class="topbar-right"><div class="noruf-badge"><span class="noruf-dot">N</span><span><small>CREADO POR</small><strong>Noruf-Labs</strong></span></div><div class="source"><i></i><span>Datos oficiales · IGN + EMSC</span><button id="theme-toggle" title="Cambiar tema">☾</button></div></div></header>
-<main class="shell">
-<section class="intro"><div><p class="eyebrow">MONITOR SÍSMICO · TIEMPO CASI REAL</p><h1>La tierra bajo<br><em>observación.</em></h1><p class="lede">Explora la actividad sísmica reciente en España y sus aguas próximas.</p></div><div class="updated"><span>ÚLTIMA ACTUALIZACIÓN</span><strong id="last-update">Conectando con IGN...</strong><small id="data-status">Sincronización inicial</small></div></section>
-<section class="stats" aria-label="Resumen sísmico"><article><span>SEÍSMOS ESTE MES</span><strong id="total-month">—</strong><small>eventos registrados</small></article><article><span>MAGNITUD MÁXIMA</span><strong id="max-mag">—</strong><small id="max-location">del periodo seleccionado</small></article><article><span>PROFUNDIDAD MEDIA</span><strong id="avg-depth">—</strong><small>km bajo la superficie</small></article><article><span>ÚLTIMAS 24 HORAS</span><strong id="last-24h">—</strong><small>actividad reciente</small></article></section>
-<section class="workspace"><div class="map-panel"><div class="panel-head"><div><p class="eyebrow">VISUALIZACIÓN ESPACIAL</p><h2>Epicentros registrados</h2></div><div class="legend"><span><i class="dot shallow"></i>Superficial</span><span><i class="dot deep"></i>Profundo</span></div></div><div id="map"></div></div>
-<aside class="filters"><div class="panel-head"><div><p class="eyebrow">CONSULTA</p><h2>Filtrar eventos</h2></div><button class="reset" id="reset-filters">Limpiar</button></div><label>PROVINCIA<select id="location-filter" aria-label="Provincia"><option value="">Toda España</option></select></label><label>MAGNITUD MÍNIMA<div class="range-row"><input id="magnitude-filter" type="range" min="0" max="6" step="0.1" value="0"><output id="magnitude-value">0.0</output></div></label><label>DESDE<input id="date-from" type="date"></label><label>HASTA<input id="date-to" type="date"></label><button class="apply" id="apply-filters">Aplicar filtros <span>→</span></button><div class="filter-note"><b id="result-count">0</b> eventos visibles en el mapa</div></aside></section>
-<section class="analysis"><div class="chart-card"><div class="panel-head"><div><p class="eyebrow">INTENSIDAD</p><h2>Frecuencia por magnitud</h2></div></div><canvas id="magnitude-chart"></canvas></div><div class="chart-card"><div class="panel-head"><div><p class="eyebrow">PROFUNDIDAD</p><h2>Distribución de focos</h2></div></div><canvas id="depth-chart"></canvas></div></section>
-<section class="events"><div class="panel-head"><div><p class="eyebrow">REGISTRO</p><h2>Últimos eventos</h2></div><span class="count-pill" id="table-count">0 resultados</span></div><div class="table-wrap"><table><thead><tr><th>FECHA Y HORA (UTC)</th><th>LOCALIZACIÓN</th><th>MAG.</th><th>PROFUNDIDAD</th><th>COORDENADAS</th><th>DURACIÓN / ONDA</th></tr></thead><tbody id="events-table"></tbody></table></div></section>
-</main><footer><div class="footer-inner"><div><span class="footer-kicker">PLATAFORMA SÍSMICA</span><strong>Terremotos España</strong><small>Fuente: IGN RSS + profundidad complementaria EMSC · Duración de onda no publicada por las fuentes consultadas.</small></div><div class="footer-brand"><span class="noruf-dot">N</span><div><span>CREADO CON PRECISIÓN POR</span><strong>Noruf-Labs</strong><nav><a href="https://wa.me/34693797777" target="_blank" rel="noreferrer">WhatsApp</a><a href="mailto:norbertou@gmail.com">norbertou@gmail.com</a></nav></div></div></div><p class="footer-note">Visualización informativa. No sustituye a los canales oficiales de emergencia.</p></footer>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="/static/script.js"></script>
-</body></html>
+    <header><div class="brand">NORUF<span>-LABS</span></div><div class="region-badge">ESPAÑA &amp; COSTA</div></header>
+    <div class="title-section"><h1>La tierra bajo observación</h1><p>Cobertura oficial IGN | Cobertura regional activa</p></div>
+    <div class="status-card"><strong>Última actualización:</strong> <span id="last-update">Cargando...</span></div>
+    <div class="stats-grid" aria-label="Estadísticas sísmicas">
+        <div class="stat-card"><div class="label">Seísmos este mes</div><div class="value" id="stat-count" style="color:var(--accent-blue)">--</div><div class="sub">eventos registrados</div></div>
+        <div class="stat-card"><div class="label">Magnitud máxima</div><div class="value" id="stat-max" style="color:var(--accent-red)">--</div><div class="sub" id="stat-max-loc">--</div></div>
+        <div class="stat-card"><div class="label">Profundidad media</div><div class="value" id="stat-depth">--</div><div class="sub">km bajo superficie</div></div>
+        <div class="stat-card"><div class="label">Últimas 24 horas</div><div class="value" id="stat-24h">--</div><div class="sub">actividad reciente</div></div>
+    </div>
+    <div class="section-header">Últimos eventos registrados</div>
+    <div class="events-list" id="events-container"><div class="empty">Cargando actividad sísmica...</div></div>
+    <div class="section-header">Ubicación espacial (mapa)</div>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([37, -3.6], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:19 }).addTo(map);
+        const formatDate = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? value : date.toLocaleString('es-ES', { timeZone:'UTC', dateStyle:'short', timeStyle:'medium' }); };
+        const depthLabel = (value) => value === null ? 'Profundidad no disponible' : `Prof: ${Number(value).toFixed(1)} km`;
+        async function loadData() {
+            try {
+                const response = await fetch('/api/earthquakes');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const events = Array.isArray(data.events) ? data.events : [];
+                document.getElementById('last-update').innerText = `${formatDate(data.updated)} · ${data.status === 'live' ? 'IGN conectado' : 'última captura'}`;
+                const now = new Date();
+                const monthEvents = events.filter((event) => { const date = new Date(event.date); return date.getUTCMonth() === now.getUTCMonth() && date.getUTCFullYear() === now.getUTCFullYear(); });
+                const max = events.reduce((current, event) => event.magnitude > current.magnitude ? event : current, { magnitude:0, location:'Sin datos' });
+                const knownDepths = events.filter((event) => event.depth !== null);
+                document.getElementById('stat-count').innerText = monthEvents.length;
+                document.getElementById('stat-max').innerText = Number(max.magnitude).toFixed(1);
+                document.getElementById('stat-max-loc').innerText = max.location;
+                document.getElementById('stat-depth').innerText = knownDepths.length ? (knownDepths.reduce((sum, event) => sum + event.depth, 0) / knownDepths.length).toFixed(1) : 'N/D';
+                document.getElementById('stat-24h').innerText = events.filter((event) => now - new Date(event.date) < 86400000).length;
+                const container = document.getElementById('events-container'); container.innerHTML = '';
+                if (!events.length) { container.innerHTML = '<div class="empty">No hay eventos disponibles.</div>'; return; }
+                events.slice().sort((a,b) => b.date.localeCompare(a.date)).forEach((event) => {
+                    const marker = L.circleMarker([event.lat, event.lon], { radius:Math.max(event.magnitude * 3, 5), color:'#ff4d4d', fillColor:'#ff4d4d', fillOpacity:.6 }).addTo(map);
+                    marker.bindPopup(`<b>${event.location}</b><br>Magnitud: ${Number(event.magnitude).toFixed(1)}<br>${depthLabel(event.depth)}<br>${formatDate(event.date)}`);
+                    const item = document.createElement('div'); item.className = 'event-item';
+                    item.innerHTML = `<div class="event-mag">${Number(event.magnitude).toFixed(1)}</div><div class="event-info"><div class="event-loc">${event.location}</div><div class="event-meta">${formatDate(event.date)} | ${depthLabel(event.depth)}</div></div>`;
+                    container.appendChild(item);
+                });
+            } catch (error) { console.error('Error cargando datos:', error); document.getElementById('events-container').innerHTML = '<div class="empty">No se pudo cargar la actividad sísmica.</div>'; document.getElementById('last-update').innerText = 'Error de conexión'; }
+        }
+        loadData();
+    </script>
+</body>
+</html>

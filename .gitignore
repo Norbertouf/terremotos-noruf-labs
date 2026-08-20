@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+earthquakes.sqlite3
+.venv/
+venv/
+.env

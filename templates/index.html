@@ -49,6 +49,25 @@
             color: var(--accent-red);
         }
 
+        .brand-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .brand-email {
+            color: var(--text-sub);
+            font-size: 0.7rem;
+            font-weight: 400;
+            text-decoration: none;
+            letter-spacing: 0;
+        }
+
+        .brand-email:hover {
+            color: var(--accent-blue);
+            text-decoration: underline;
+        }
+
         .region-badge {
             background: #1f2937;
             color: var(--accent-blue);
@@ -222,7 +241,7 @@
 <body>
 
     <header>
-        <div class="brand">NORUF<span>-LABS</span></div>
+        <div class="brand-row"><div class="brand">NORUF<span>-LABS</span></div><a class="brand-email" href="mailto:norbertou@gmail.com">norbertou@gmail.com</a></div>
         <div class="region-badge">ESPAÑA & COSTA</div>
     </header>
 

@@ -67,7 +67,7 @@ async def fetch_ign():
 @app.on_event('startup')
 def startup(): setup_db()
 @app.get('/')
-def index(): return FileResponse(ROOT / 'index.html')
+def index(): return FileResponse(ROOT / 'templates' / 'index.html')
 @app.get('/api/earthquakes')
 async def earthquakes(min_magnitude: float = Query(0, ge=0, le=10), location: str = '', date_from: str = '', date_to: str = ''):
     events, status = await fetch_ign()

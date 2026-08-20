@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noruf-Labs | Monitor Sísmico</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-color:#0b0f19; --card-bg:#111827; --card-border:#1f2937; --accent-red:#f87171; --accent-blue:#60a5fa; --accent-teal:#2dd4bf; --text-main:#f9fafb; --text-sub:#9ca3af; }
+        * { box-sizing:border-box; } body { background:var(--bg-color); color:var(--text-main); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; margin:0; padding:12px; }
+        header { display:flex; justify-content:space-between; align-items:center; padding:8px 0 16px; border-bottom:1px solid var(--card-border); margin-bottom:16px; }
+        .brand { font-size:1.3rem; font-weight:800; letter-spacing:.5px; color:#fff; } .brand span { color:var(--accent-red); }
+        .region-badge,.badge-count { background:#1f2937; color:var(--accent-blue); padding:4px 10px; border-radius:12px; font-size:.75rem; font-weight:600; border:1px solid var(--card-border); }
+        .title-section h1 { font-size:1.6rem; margin:0 0 4px; } .title-section p { color:var(--text-sub); font-size:.85rem; margin:0 0 12px; }
+        .status-card { background:#1e293b; border:1px solid var(--card-border); border-left:4px solid var(--accent-blue); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:.85rem; }
+        .charts-container { display:flex; flex-direction:column; gap:16px; margin-bottom:20px; } .chart-card,.register-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:16px; }
+        .chart-card .subtitle,.register-header .subtitle { font-size:.7rem; color:var(--accent-teal); text-transform:uppercase; letter-spacing:1px; font-weight:700; } .chart-card h3 { font-size:1.2rem; margin:4px 0 16px; }
+        .chart-wrapper { position:relative; height:220px; width:100%; } .register-card { margin-bottom:20px; } .register-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .register-header h3 { margin:2px 0 0; font-size:1.3rem; } .badge-count { color:var(--accent-teal); } .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        table { width:100%; border-collapse:collapse; min-width:600px; text-align:left; } th { font-size:.7rem; color:var(--text-sub); text-transform:uppercase; letter-spacing:.5px; padding:8px 12px; border-bottom:1px solid var(--card-border); } td { padding:12px; font-size:.85rem; border-bottom:1px solid var(--card-border); white-space:nowrap; }
+        .mag-highlight { color:var(--accent-red); font-weight:bold; font-size:1rem; } #map { height:320px; border-radius:8px; border:1px solid var(--card-border); margin-bottom:8px; }
+        .empty { color:var(--text-sub); padding:18px; text-align:center; } @media(max-width:520px) { body { padding:10px; } .region-badge { font-size:.65rem; } .title-section h1 { font-size:1.4rem; } }
+    </style>
+</head>
+<body>
+    <header><div class="brand">NORUF<span>-LABS</span></div><div class="region-badge">ESPAÑA &amp; COSTA</div></header>
+    <div class="title-section"><h1>La tierra bajo observación</h1><p>Cobertura oficial IGN | Cobertura regional activa</p></div>
+    <div class="status-card"><strong>Última actualización:</strong> <span id="last-update">Cargando...</span></div>
+    <div class="charts-container">
+        <div class="chart-card"><div class="subtitle">INTENSIDAD</div><h3>Frecuencia por magnitud</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
+        <div class="chart-card"><div class="subtitle">PROFUNDIDAD</div><h3>Distribución de focos</h3><div class="chart-wrapper"><canvas id="doughnutChart"></canvas></div></div>
+    </div>
+    <div class="register-card"><div class="register-header"><div><div class="subtitle">REGISTRO</div><h3>Últimos eventos</h3></div><div class="badge-count" id="results-count">0 resultados</div></div><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA (ESPAÑA)</th><th>LOCALIZACIÓN</th><th>MAG.</th><th>PROFUNDIDAD</th><th>COORDENADAS</th></tr></thead><tbody id="events-table-body"></tbody></table></div></div>
+    <div class="chart-card"><div class="subtitle" style="margin-bottom:8px">UBICACIÓN ESPACIAL</div><div id="map"></div></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([37, -3.6], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:19 }).addTo(map);
+        let barChartInst = null; let doughnutChartInst = null; const markers = [];
+        function formatFechaEspana(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '--' : date.toLocaleString('es-ES', { timeZone:'Europe/Madrid', dateStyle:'short', timeStyle:'medium' }); }
+        function renderCharts(magData, depthData) {
+            if (barChartInst) barChartInst.destroy(); if (doughnutChartInst) doughnutChartInst.destroy();
+            barChartInst = new Chart(document.getElementById('barChart'), { type:'bar', data:{ labels:Object.keys(magData), datasets:[{ data:Object.values(magData), backgroundColor:['#38bdf8','#34d399','#fbbf24','#2dd4bf','#15803d'], borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af'}}, y:{grid:{color:'#1f2937'},ticks:{color:'#9ca3af',precision:0}} } } });
+            doughnutChartInst = new Chart(document.getElementById('doughnutChart'), { type:'doughnut', data:{ labels:Object.keys(depthData), datasets:[{ data:Object.values(depthData), backgroundColor:['#f87171','#fbbf24','#2dd4bf','#374151'], borderColor:'#1f2937', borderWidth:2 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:11}}} } } });
+        }
+        async function loadData() {
+            try {
+                const response = await fetch('/api/earthquakes'); if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const payload = await response.json(); const events = Array.isArray(payload.events) ? payload.events : [];
+                document.getElementById('last-update').innerText = `${formatFechaEspana(payload.updated)} · ${payload.status === 'live' ? 'IGN conectado' : 'última captura'}`;
+                document.getElementById('results-count').innerText = `${events.length} resultados`;
+                const tbody = document.getElementById('events-table-body'); tbody.innerHTML = ''; markers.splice(0).forEach((marker) => marker.remove());
+                const magBuckets = {'0–1':0,'1–2':0,'2–3':0,'3–4':0,'4+':0}; const depthBuckets = {'< 10 km':0,'10–30 km':0,'> 30 km':0,'Sin dato':0};
+                events.slice().sort((a,b) => b.date.localeCompare(a.date)).forEach((event) => {
+                    const mag = Number(event.magnitude) || 0; const depth = event.depth === null ? null : Number(event.depth); const dateFormatted = formatFechaEspana(event.date); const loc = event.location || 'Desconocido';
+                    if (mag < 1) magBuckets['0–1']++; else if (mag < 2) magBuckets['1–2']++; else if (mag < 3) magBuckets['2–3']++; else if (mag < 4) magBuckets['3–4']++; else magBuckets['4+']++;
+                    if (depth === null || Number.isNaN(depth)) depthBuckets['Sin dato']++; else if (depth < 10) depthBuckets['< 10 km']++; else if (depth <= 30) depthBuckets['10–30 km']++; else depthBuckets['> 30 km']++;
+                    const row = document.createElement('tr'); row.innerHTML = `<td>${dateFormatted}</td><td><strong>${loc}</strong></td><td class="mag-highlight">${mag.toFixed(1)}</td><td>${depth === null || Number.isNaN(depth) ? 'No disponible' : `${depth.toFixed(1)} km`}</td><td style="color:var(--text-sub)">${Number(event.lat).toFixed(2)}, ${Number(event.lon).toFixed(2)}</td>`; tbody.appendChild(row);
+                    if (event.lat && event.lon) { const marker = L.circleMarker([event.lat,event.lon], {radius:Math.max(mag*3,5),color:'#f87171',fillColor:'#f87171',fillOpacity:.6}).addTo(map); marker.bindPopup(`<b>${loc}</b><br>Magnitud: ${mag.toFixed(1)}<br>${dateFormatted}`); markers.push(marker); }
+                });
+                if (!events.length) tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay eventos disponibles.</td></tr>';
+                renderCharts(magBuckets, depthBuckets);
+            } catch (error) { console.error('Error cargando seísmos:', error); document.getElementById('last-update').innerText = 'Error de conexión'; document.getElementById('events-table-body').innerHTML = '<tr><td colspan="5" class="empty">No se pudo cargar la actividad sísmica.</td></tr>'; }
+        }
+        loadData();
+    </script>
+</body>
+</html>

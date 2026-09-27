@@ -23,3 +23,10 @@ Este proyecto existe para ofrecer información sísmica de Granada y provincia d
 Calidad alta, alcance contenido.
 
 Toda modificación futura debe revisarse contra esta Estrella Polar antes de implementarse.
+
+## Regla de utilidad y trabajo
+
+Que lo que esté, sirva; y que lo que diga, sea verdad.
+Cada elemento del proyecto debe aportar utilidad real al usuario. Cada texto, dato, etiqueta o 
+interpretación debe ser correcto, claro y estar respaldado por la información disponible. Si algo no 
+aporta o no puede afirmarse con certeza, no debe presentarse como si lo hiciera. 

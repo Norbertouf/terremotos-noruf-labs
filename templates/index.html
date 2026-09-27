@@ -266,6 +266,7 @@
 
     <div class="status-card">
         <strong>Datos consultados:</strong> <span id="last-update">Cargando...</span>
+        <div class="activity-hint" id="macro-warning" style="display:none;">La información macrosísmica está temporalmente incompleta; puede haber eventos sentidos en Granada aún no mostrados.</div>
     </div>
 
     <!-- 1. REGISTRO DE EVENTOS: BLOQUE PRINCIPAL -->
@@ -382,7 +383,7 @@
                 const rawEvents = (data.events || []).slice().sort((a, b) => b.date.localeCompare(a.date));
 
                 // Firma ligera de todos los campos renderizados: si no cambian, solo refrescar el estado, sin re-render
-                const signature = JSON.stringify(rawEvents.map(e => [e.id, e.date, e.location, e.magnitude, e.depth, e.lat, e.lon]));
+                const signature = JSON.stringify(rawEvents.map(e => [e.id, e.date, e.location, e.magnitude, e.depth, e.lat, e.lon, e.intensity_max, e.felt_granada]));
                 if (signature !== window.__lastSignature) {
                     window.__lastSignature = signature;
                     renderEvents(rawEvents);
@@ -392,6 +393,8 @@
                 const hora = formatFechaEspana(data.updated);
                 const fuente = data.status === 'live' ? 'IGN' : 'IGN (caché local)';
                 document.getElementById('last-update').innerText = `${hora} · Fuente: ${fuente}`;
+                const warning = document.getElementById('macro-warning');
+                if (warning) warning.style.display = data.macro_status === 'degraded' ? '' : 'none';
             } catch (err) {
                 console.error("Error cargando seísmos:", err);
                 document.getElementById('last-update').innerText = 'No se pudo consultar · Fuente: IGN';

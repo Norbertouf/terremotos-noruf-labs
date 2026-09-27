@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-import json, math, re, sqlite3
+import json, logging, math, re, sqlite3
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import feedparser, httpx
@@ -9,7 +9,22 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).parent; DB = ROOT / 'earthquakes.sqlite3'
 FEEDS = ['https://www.ign.es/ign/RssTools/sismologia.xml']
 EMSC_FEED = 'https://www.seismicportal.eu/fdsnws/event/1/query?format=xml&limit=200&minlat=26&maxlat=45&minlon=-20&maxlon=6'
-PROVINCE_CODES = {'AL': 'Almería', 'AV': 'Ávila', 'B': 'Barcelona', 'BA': 'Badajoz', 'BI': 'Bizkaia', 'BU': 'Burgos', 'C': 'A Coruña', 'CA': 'Cádiz', 'CC': 'Cáceres', 'CO': 'Córdoba', 'CR': 'Ciudad Real', 'CS': 'Castellón', 'CU': 'Cuenca', 'GC': 'Las Palmas', 'GI': 'Girona', 'GR': 'Granada', 'GU': 'Guadalajara', 'H': 'Huelva', 'HU': 'Huesca', 'J': 'Jaén', 'L': 'Lleida', 'LE': 'León', 'LO': 'La Rioja', 'LU': 'Lugo', 'M': 'Madrid', 'MA': 'Málaga', 'MU': 'Murcia', 'NA': 'Navarra', 'O': 'Asturias', 'OR': 'Ourense', 'P': 'Palencia', 'PM': 'Baleares', 'PO': 'Pontevedra', 'S': 'Cantabria', 'SA': 'Salamanca', 'SE': 'Sevilla', 'SG': 'Segovia', 'SO': 'Soria', 'SS': 'Gipuzkoa', 'T': 'Tarragona', 'TE': 'Teruel', 'TF': 'Santa Cruz de Tenerife', 'TO': 'Toledo', 'V': 'Valencia', 'VA': 'Valladolid', 'VI': 'Álava', 'Z': 'Zaragoza', 'ZA': 'Zamora'}
+# Geometría provincial oficial de Granada (IGN/BDDAE), descargada una vez del WFS INSPIRE del IGN.
+# Ver granada_polygon.json: cada punto es [lat, lon], en grados y en ese orden (orden nativo de EPSG:4258).
+_GRANADA_POLY = json.loads((ROOT / 'granada_polygon.json').read_text(encoding='utf-8'))
+_GRANADA_RINGS = [(_pol['exterior'], _pol.get('interiors', [])) for _pol in _GRANADA_POLY['poligonos']]
+def _pip(lat, lon, ring):
+    inside = False; j = len(ring) - 1
+    for i in range(len(ring)):
+        yi, xi = ring[i]; yj, xj = ring[j]
+        if ((yi > lat) != (yj > lat)) and (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi): inside = not inside
+        j = i
+    return inside
+def punto_en_granada(lat, lon):
+    if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)): return False
+    for exterior, holes in _GRANADA_RINGS:
+        if _pip(lat, lon, exterior) and not any(_pip(lat, lon, hole) for hole in holes): return True
+    return False
 app = FastAPI(title='Terremotos España'); app.mount('/static', StaticFiles(directory=ROOT), name='static')
 def number(value, default=0.0):
     try: return float(str(value).replace(',', '.'))
@@ -27,9 +42,26 @@ def parse_entries(entries):
         location_match = re.search(r'magnitud\s+[0-9.,]+\s+en\s+(.+?)\s+en la fecha', description, re.I | re.S)
         event_date = datetime.strptime(date_match.group(1), '%d/%m/%Y %H:%M:%S').replace(tzinfo=timezone.utc).isoformat() if date_match else datetime.now(timezone.utc).isoformat()
         location = location_match.group(1).strip() if location_match else entry.get('title', 'Evento sísmico')
-        code = re.search(r'\.([A-Z]{1,2})$', location)
-        province = PROVINCE_CODES.get(code.group(1)) if code else ('Canarias' if 'CANARI' in location.upper() else ('Baleares' if 'BALEAR' in location.upper() else ''))
-        result.append({'id': entry.get('id', entry.get('link', text)), 'date': event_date, 'location': location, 'province': province, 'magnitude': number(magnitude_match.group(1)) if magnitude_match else 0, 'depth': None, 'duration': None, 'wave_type': None, 'lat': coords[0], 'lon': coords[1]})
+        evid_match = re.search(r'evid=([^&\s<>"]+)', entry.get('link', '') or entry.get('id', '') or '')
+        evid = evid_match.group(1) if evid_match else ''
+        # Clasificación del epicentro: sufijo oficial .GR del nombre del IGN, o punto dentro de la
+        # geometría provincial oficial (IGN/BDDAE). in_granada solo afirma dónde está el epicentro;
+        # no afirma si el terremoto se sintió (eso corresponde a la fase de datos macrosísmicos).
+        # Clasificación del epicentro: sufijo oficial .GR del nombre del IGN, o punto dentro de la
+        # geometría provincial oficial (IGN/BDDAE). in_granada solo afirma dónde está el epicentro;
+        # no afirma si el terremoto se sintió (eso corresponde a la fase de datos macrosísmicos).
+        # Si el sufijo .GR y el punto oficial se contradicen, se deja constancia en granada_senal
+        # y en el log; no se oculta la inconsistencia ni se presenta como certeza falsa.
+        con_sufijo = location.upper().endswith('.GR')
+        dentro_poligono = punto_en_granada(coords[0], coords[1])
+        if con_sufijo and dentro_poligono: granada_senal = 'sufijo_y_poligono'
+        elif con_sufijo:
+            granada_senal = 'sufijo_con_inconsistencia'
+            logging.warning('IGN: sufijo .GR fuera del polígono provincial: %s en %s,%s (evid=%s)', location, coords[0], coords[1], evid or 'sin evid')
+        elif dentro_poligono: granada_senal = 'poligono'
+        else: granada_senal = 'fuera'
+        in_granada = con_sufijo or dentro_poligono
+        result.append({'id': evid or entry.get('id', entry.get('link', text)), 'date': event_date, 'location': location, 'in_granada': in_granada, 'granada_senal': granada_senal, 'magnitude': number(magnitude_match.group(1)) if magnitude_match else 0, 'depth': None, 'duration': None, 'wave_type': None, 'lat': coords[0], 'lon': coords[1]})
     return result
 
 async def fetch_emsc_depth():
@@ -77,5 +109,9 @@ async def earthquakes(min_magnitude: float = Query(0, ge=0, le=10), location: st
             now = datetime.now(timezone.utc).isoformat(); db.executemany('INSERT OR REPLACE INTO earthquakes VALUES (?, ?, ?)', [(e['id'], json.dumps(e), now) for e in events])
     else:
         with sqlite3.connect(DB) as db: events = [json.loads(row[0]) for row in db.execute('SELECT payload FROM earthquakes ORDER BY fetched_at DESC')]
-    filtered = [e for e in events if e['magnitude'] >= min_magnitude and (not location or e.get('province') == location) and (not date_from or e['date'][:10] >= date_from) and (not date_to or e['date'][:10] <= date_to)]
+    # Criterio A: solo eventos con epicentro dentro de Granada/provincia (señal oficial .GR o
+    # geometría provincial IGN). La ausencia de datos macrosísmicos no afirma aquí nada sobre
+    # si un terremoto se sintió; el criterio B (sentidos en Granada) es la fase siguiente.
+    filtered = [e for e in events if e.get('in_granada') and e['magnitude'] >= min_magnitude and (not date_from or e['date'][:10] >= date_from) and (not date_to or e['date'][:10] <= date_to)]
+    if location: filtered = [e for e in filtered if location.lower() in e.get('location', '').lower()]
     return {'events': filtered, 'status': status, 'updated': datetime.now(timezone.utc).isoformat()}

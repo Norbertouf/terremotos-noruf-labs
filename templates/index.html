@@ -183,6 +183,39 @@
             font-size: 0.95rem;
         }
 
+        .muted-col, td.muted {
+            color: var(--text-sub);
+            font-size: 0.78rem;
+        }
+
+        td.delta {
+            color: var(--text-sub);
+            font-size: 0.78rem;
+        }
+
+        tr.latest td {
+            background: rgba(96, 165, 250, 0.06);
+            border-bottom-color: rgba(96, 165, 250, 0.35);
+        }
+
+        tr.latest td:first-child {
+            box-shadow: inset 3px 0 0 var(--accent-blue);
+        }
+
+        td.latest-tag {
+            color: var(--accent-blue);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .activity-hint {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
         /* 3. GRÁFICOS */
         .charts-container {
             display: flex;
@@ -232,10 +265,40 @@
     </div>
 
     <div class="status-card">
-        <strong>Última actualización:</strong> <span id="last-update">Cargando...</span> · IGN conectado
+        <strong>Datos consultados:</strong> <span id="last-update">Cargando...</span>
     </div>
 
-    <!-- 1. BLOQUE DE RESUMEN RÁPIDO (REJILLA DE 4) -->
+    <!-- 1. REGISTRO DE EVENTOS: BLOQUE PRINCIPAL -->
+    <div class="register-card">
+        <div class="register-header">
+            <div>
+                <div class="subtitle">REGISTRO</div>
+                <h3 style="margin: 2px 0 0 0; font-size: 1.3rem;">Últimos eventos</h3>
+                <div class="activity-hint" id="activity-24h" style="display:none;"></div>
+            </div>
+            <div class="badge-count" id="results-count">-- resultados</div>
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>FECHA Y HORA (ESPAÑA)</th>
+                        <th title="Tiempo transcurrido entre eventos consecutivos">Δ</th>
+                        <th>LOCALIZACIÓN</th>
+                        <th>MAG.</th>
+                        <th>PROFUNDIDAD</th>
+                        <th class="muted-col">COORDENADAS</th>
+                    </tr>
+                </thead>
+                <tbody id="events-table-body">
+                    <!-- Se rellena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. BLOQUE DE RESUMEN RÁPIDO (REJILLA DE 4) -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="label">Seísmos este mes</div>
@@ -256,34 +319,6 @@
             <div class="label">Últimas 24 Horas</div>
             <div class="value" id="stat-24h">--</div>
             <div class="sub">actividad reciente</div>
-        </div>
-    </div>
-
-    <!-- 2. REGISTRO EN TABLA DESPLAZABLE -->
-    <div class="register-card">
-        <div class="register-header">
-            <div>
-                <div class="subtitle">REGISTRO</div>
-                <h3 style="margin: 2px 0 0 0; font-size: 1.3rem;">Últimos eventos</h3>
-            </div>
-            <div class="badge-count" id="results-count">-- resultados</div>
-        </div>
-
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th>FECHA Y HORA (ESPAÑA)</th>
-                        <th>LOCALIZACIÓN</th>
-                        <th>MAG.</th>
-                        <th>PROFUNDIDAD</th>
-                        <th>COORDENADAS</th>
-                    </tr>
-                </thead>
-                <tbody id="events-table-body">
-                    <!-- Se rellena dinámicamente -->
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -339,29 +374,69 @@
         }
 
         async function loadData() {
+            if (window.__loading) return; // evita consultas concurrentes
+            window.__loading = true;
             try {
                 const res = await fetch('/api/earthquakes');
                 const data = await res.json();
-                const rawEvents = data.events || [];
+                const rawEvents = (data.events || []).slice().sort((a, b) => b.date.localeCompare(a.date));
 
-                document.getElementById('last-update').innerText = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
-                document.getElementById('results-count').innerText = `${rawEvents.length} resultados`;
+                // Firma ligera de todos los campos renderizados: si no cambian, solo refrescar el estado, sin re-render
+                const signature = JSON.stringify(rawEvents.map(e => [e.id, e.date, e.location, e.magnitude, e.depth, e.lat, e.lon]));
+                if (signature !== window.__lastSignature) {
+                    window.__lastSignature = signature;
+                    renderEvents(rawEvents);
+                }
 
-                // Calcular estadísticas para las 4 tarjetas superiores
-                let maxMag = 0;
-                let maxLoc = '--';
-                let sumDepth = 0;
-                let countDepth = 0;
-                let count24h = 0;
-                const now = new Date();
+                // Estado veraz y discreto: hora local de la consulta + fuente
+                const hora = formatFechaEspana(data.updated);
+                const fuente = data.status === 'live' ? 'IGN' : 'IGN (caché local)';
+                document.getElementById('last-update').innerText = `${hora} · Fuente: ${fuente}`;
+            } catch (err) {
+                console.error("Error cargando seísmos:", err);
+                document.getElementById('last-update').innerText = 'No se pudo consultar · Fuente: IGN';
+            } finally {
+                window.__loading = false;
+            }
+        }
 
-                const tbody = document.getElementById('events-table-body');
-                tbody.innerHTML = '';
+        function formatDelta(ms) {
+            if (!(ms > 0)) return '—';
+            const min = Math.round(ms / 60000);
+            if (min < 60) return `+${min} min`;
+            const h = Math.floor(min / 60), m = min % 60;
+            if (h < 24) return m ? `+${h} h ${m} min` : `+${h} h`;
+            const d = Math.floor(h / 24), hh = h % 24;
+            return hh ? `+${d} d ${hh} h` : `+${d} d`;
+        }
 
-                const magBuckets = { '0–1': 0, '1–2': 0, '2–3': 0, '3–4': 0, '4+': 0 };
-                const depthBuckets = { '< 10 km': 0, '10–30 km': 0, '> 30 km': 0, 'Sin dato': 0 };
+        function renderEvents(rawEvents) {
+            let maxMag = 0;
+            let maxLoc = '--';
+            let sumDepth = 0;
+            let countDepth = 0;
+            let count24h = null;
+            const now = new Date();
 
-                rawEvents.forEach(ev => {
+            const tbody = document.getElementById('events-table-body');
+            tbody.innerHTML = '';
+
+            const magBuckets = { '0–1': 0, '1–2': 0, '2–3': 0, '3–4': 0, '4+': 0 };
+            const depthBuckets = { '< 10 km': 0, '10–30 km': 0, '> 30 km': 0, 'Sin dato': 0 };
+
+            // Resumen de actividad reciente: solo si el registro cubre las últimas 24 h
+            // (el feed IGN no garantiza exhaustividad completa; se indica como referencia)
+            const oldest = rawEvents.length ? new Date(rawEvents[rawEvents.length - 1].date) : null;
+            if (oldest && !Number.isNaN(oldest.getTime()) && (now - oldest) >= 24 * 3600 * 1000) {
+                count24h = rawEvents.filter(ev => ev.date && (now - new Date(ev.date)) <= 24 * 3600 * 1000).length;
+                const hint = document.getElementById('activity-24h');
+                hint.innerText = `${count24h} evento${count24h === 1 ? '' : 's'} en las últimas 24 h (según registro IGN)`;
+                hint.style.display = '';
+            } else {
+                document.getElementById('activity-24h').style.display = 'none';
+            }
+
+            rawEvents.forEach((ev, idx) => {
                     const mag = parseFloat(ev.magnitude) || 0;
                     const depth = ev.depth !== undefined && ev.depth !== null && ev.depth !== 'No disponible' ? parseFloat(ev.depth) : null;
                     const dateFormatted = formatFechaEspana(ev.date);
@@ -381,14 +456,6 @@
                         countDepth++;
                     }
 
-                    // Métrica 24 Horas
-                    if (ev.date) {
-                        const evDate = new Date(ev.date);
-                        if ((now - evDate) <= 24 * 3600 * 1000) {
-                            count24h++;
-                        }
-                    }
-
                     // Buckets Magnitud
                     if (mag < 1) magBuckets['0–1']++;
                     else if (mag < 2) magBuckets['1–2']++;
@@ -402,14 +469,25 @@
                     else if (depth <= 30) depthBuckets['10–30 km']++;
                     else depthBuckets['> 30 km']++;
 
-                    // Fila Tabla
+                    // Δ: tiempo transcurrido respecto al evento consecutivo anterior (siempre positivo)
+                    // Tabla ordenada de más reciente a más antiguo: el evento idx es posterior al idx+1
+                    let deltaCell = '<td class="delta">—</td>';
+                    if (idx < rawEvents.length - 1) {
+                        const t = new Date(ev.date).getTime();
+                        const prev = new Date(rawEvents[idx + 1].date).getTime();
+                        if (t > prev) deltaCell = `<td class="delta">${formatDelta(t - prev)}</td>`;
+                    }
+
+                    // Fila Tabla (la más reciente lleva una ligera diferenciación visual)
                     const tr = document.createElement('tr');
+                    if (idx === 0) tr.className = 'latest';
                     tr.innerHTML = `
-                        <td>${dateFormatted}</td>
+                        <td>${dateFormatted}${idx === 0 ? ' <span class="latest-tag">· más reciente</span>' : ''}</td>
+                        ${deltaCell}
                         <td><strong>${loc}</strong></td>
                         <td class="mag-highlight">${mag.toFixed(1)}</td>
                         <td>${depth !== null ? depth + ' km' : 'No disponible'}</td>
-                        <td style="color: var(--text-sub);">${lat.toFixed(2)}, ${lon.toFixed(2)}</td>
+                        <td class="muted">${lat.toFixed(2)}, ${lon.toFixed(2)}</td>
                     `;
                     tbody.appendChild(tr);
 
@@ -425,17 +503,14 @@
                 });
 
                 // Asignar a tarjetas superiores
-                document.getElementById('stat-count').innerText = rawEvents.length;
-                document.getElementById('stat-max').innerText = maxMag > 0 ? maxMag.toFixed(1) : '--';
-                document.getElementById('stat-max-loc').innerText = maxLoc;
-                document.getElementById('stat-depth').innerText = countDepth > 0 ? (sumDepth / countDepth).toFixed(1) : '--';
-                document.getElementById('stat-24h').innerText = count24h;
+            document.getElementById('results-count').innerText = `${rawEvents.length} resultados`;
+            document.getElementById('stat-count').innerText = rawEvents.length;
+            document.getElementById('stat-max').innerText = maxMag > 0 ? maxMag.toFixed(1) : '--';
+            document.getElementById('stat-max-loc').innerText = maxLoc;
+            document.getElementById('stat-depth').innerText = countDepth > 0 ? (sumDepth / countDepth).toFixed(1) : '--';
+            document.getElementById('stat-24h').innerText = count24h !== null ? count24h : '--';
 
-                renderCharts(magBuckets, depthBuckets);
-
-            } catch (err) {
-                console.error("Error cargando seísmos:", err);
-            }
+            renderCharts(magBuckets, depthBuckets);
         }
 
         function renderCharts(magData, depthData) {
@@ -490,6 +565,8 @@
         }
 
         loadData();
+        // Autoactualización cada 3 minutos; loadData evita consultas concurrentes y re-render si no hay cambios
+        setInterval(loadData, 180000);
     </script>
 </body>
 </html>

@@ -29,20 +29,37 @@
             padding: 12px;
         }
 
-        header {
+        header.topbar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0 16px 0;
+            align-items: baseline;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 8px 0 12px 0;
             border-bottom: 1px solid var(--card-border);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
+
+        .topbar h1 {
+            font-size: 1.35rem;
+            margin: 0;
+        }
+
+        .topbar .cobertura, .topbar .status-inline {
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .topbar .status-inline strong { color: var(--text-main); font-weight: 600; }
+        .topbar .region-badge { margin-left: auto; white-space: nowrap; }
+        .topbar .activity-hint { flex-basis: 100%; }
 
         .brand {
             font-size: 1.3rem;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #ffffff;
+            white-space: nowrap;
         }
 
         .brand span {
@@ -60,24 +77,14 @@
         }
 
         .title-section h1 {
-            font-size: 1.6rem;
-            margin: 0 0 4px 0;
+            font-size: 1.35rem;
+            margin: 0;
         }
 
         .title-section p {
             color: var(--text-sub);
-            font-size: 0.85rem;
-            margin: 0 0 12px 0;
-        }
-
-        .status-card {
-            background: #1e293b;
-            border: 1px solid var(--card-border);
-            border-left: 4px solid var(--accent-blue);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 16px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            margin: 0;
         }
 
         /* 1. REJILLA DE 4 TARJETAS DE RESUMEN */
@@ -323,20 +330,16 @@
 </head>
 <body>
 
-    <header>
+    <header class="topbar">
         <div class="brand">NORUF<span>-LABS</span></div>
+        <div class="title-section">
+            <h1>La tierra bajo observación</h1>
+            <p class="cobertura">Cobertura oficial IGN · Cobertura regional activa</p>
+        </div>
+        <div class="status-inline"><strong>Datos consultados:</strong> <span id="last-update">Cargando...</span></div>
         <div class="region-badge">GRANADA & PROVINCIA</div>
-    </header>
-
-    <div class="title-section">
-        <h1>La tierra bajo observación</h1>
-        <p>Cobertura oficial IGN | Cobertura regional activa</p>
-    </div>
-
-    <div class="status-card">
-        <strong>Datos consultados:</strong> <span id="last-update">Cargando...</span>
         <div class="activity-hint" id="macro-warning" style="display:none;">La información macrosísmica está temporalmente incompleta; puede haber eventos sentidos en Granada aún no mostrados.</div>
-    </div>
+    </header>
 
     <!-- 1. REGISTRO DE EVENTOS: BLOQUE PRINCIPAL -->
     <div class="register-card">
@@ -437,8 +440,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const map = L.map('map').setView([37.0, -3.6], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 19
         }).addTo(map);
 

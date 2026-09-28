@@ -278,6 +278,24 @@
         @media (max-width: 640px) {
             th.int-col, td.int-col { display: none; }
             .loc-mobile-int { display: inline-block; }
+
+            /* Cabecera: el contacto y el badge pasan limpios a una segunda línea */
+            .topbar { align-items: flex-start; row-gap: 4px; }
+            .topbar-right {
+                margin-left: 0;
+                flex-basis: 100%;
+                flex-wrap: wrap;
+                gap: 6px 10px;
+            }
+
+            /* Registro: título en línea propia y controles con separación limpia */
+            .register-header {
+                flex-wrap: wrap;
+                gap: 8px 10px;
+            }
+            .register-header > div:first-child { flex-basis: 100%; }
+            .register-header .badge-count { margin-left: 0; }
+            .register-header .info-btn { margin-left: 0; }
         }
 
         .muted-col, td.muted {

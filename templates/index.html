@@ -29,29 +29,47 @@
             padding: 12px;
         }
 
-        header {
+        header.topbar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0 16px 0;
+            align-items: baseline;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 8px 0 12px 0;
             border-bottom: 1px solid var(--card-border);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
+
+        .topbar h1 {
+            font-size: 1.35rem;
+            margin: 0;
+        }
+
+        .topbar .cobertura, .topbar .status-inline {
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .topbar .status-inline strong { color: var(--text-main); font-weight: 600; }
+        .topbar .region-badge { white-space: nowrap; }
+        .topbar .activity-hint { flex-basis: 100%; }
 
         .brand {
             font-size: 1.3rem;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #ffffff;
+            white-space: nowrap;
         }
 
         .brand span {
             color: var(--accent-red);
         }
 
-        .brand-row {
+        .topbar-right {
+            margin-left: auto;
             display: flex;
-            align-items: baseline;
+            align-items: center;
             gap: 10px;
         }
 
@@ -61,6 +79,7 @@
             font-weight: 400;
             text-decoration: none;
             letter-spacing: 0;
+            white-space: nowrap;
         }
 
         .brand-email:hover {
@@ -79,24 +98,14 @@
         }
 
         .title-section h1 {
-            font-size: 1.6rem;
-            margin: 0 0 4px 0;
+            font-size: 1.35rem;
+            margin: 0;
         }
 
         .title-section p {
             color: var(--text-sub);
-            font-size: 0.85rem;
-            margin: 0 0 12px 0;
-        }
-
-        .status-card {
-            background: #1e293b;
-            border: 1px solid var(--card-border);
-            border-left: 4px solid var(--accent-blue);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 16px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            margin: 0;
         }
 
         /* 1. REJILLA DE 4 TARJETAS DE RESUMEN */
@@ -202,6 +211,108 @@
             font-size: 0.95rem;
         }
 
+        /* Intensidad EMS (colores derivados de los marcadores oficiales del IGN:
+           int01.png..int010.png, /web/resources/sismologia/tproximos/iconos/) */
+        .int-chip {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .int-chip.neutral { color: var(--text-sub); border: 1px solid var(--card-border); }
+        .int-col { white-space: nowrap; }
+        .loc-extra { display: block; font-size: 0.75rem; margin-top: 4px; white-space: normal; }
+        .loc-mobile-int { display: none; }
+        .locs-badge { color: var(--accent-blue); cursor: pointer; margin-right: 8px; }
+        .locs-badge:hover { text-decoration: underline; }
+        .sentido-chip {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            color: var(--accent-teal);
+            background: rgba(45, 212, 191, .08);
+            border: 1px solid rgba(45, 212, 191, .35);
+            margin-right: 8px;
+        }
+        .locs-row td { background: rgba(96, 165, 250, .04); }
+        .locs-panel { font-size: 0.78rem; color: var(--text-sub); line-height: 2; white-space: normal; }
+        .locs-title, .locs-subtitle { color: var(--text-main); font-weight: 600; }
+        .locs-subtitle { margin-top: 8px; }
+        .locs-int { display: block; margin-top: 2px; }
+        .loc-item { margin-right: 8px; }
+        .ems-btn, .info-btn {
+            background: var(--card-bg);
+            color: var(--text-sub);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            cursor: pointer;
+        }
+        .ems-btn:hover, .info-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
+        .info-btn { margin-left: 6px; }
+        .ems-legend, .info-legend {
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            line-height: 1.9;
+            border-top: 1px dashed var(--card-border);
+            padding-top: 10px;
+            white-space: normal;
+        }
+        .ems-legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 4px 14px;
+            margin: 6px 0;
+        }
+        .ems-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 640px) {
+            th.int-col, td.int-col { display: none; }
+            .loc-mobile-int { display: inline-block; }
+        }
+
+        .muted-col, td.muted {
+            color: var(--text-sub);
+            font-size: 0.78rem;
+        }
+
+        td.delta {
+            color: var(--text-sub);
+            font-size: 0.78rem;
+        }
+
+        tr.latest td {
+            background: rgba(96, 165, 250, 0.06);
+            border-bottom-color: rgba(96, 165, 250, 0.35);
+        }
+
+        tr.latest td:first-child {
+            box-shadow: inset 3px 0 0 var(--accent-blue);
+        }
+
+        td.latest-tag {
+            color: var(--accent-blue);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .activity-hint {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
         /* 3. GRÁFICOS */
         .charts-container {
             display: flex;
@@ -240,21 +351,67 @@
 </head>
 <body>
 
-    <header>
-        <div class="brand-row"><div class="brand">NORUF<span>-LABS</span></div><a class="brand-email" href="mailto:norbertou@gmail.com">norbertou@gmail.com</a></div>
-        <div class="region-badge">ESPAÑA & COSTA</div>
+    <header class="topbar">
+        <div class="brand">NORUF<span>-LABS</span></div>
+        <div class="title-section">
+            <h1>La tierra bajo observación</h1>
+            <p class="cobertura">Cobertura oficial IGN · Cobertura regional activa</p>
+        </div>
+        <div class="status-inline"><strong>Datos consultados:</strong> <span id="last-update">Cargando...</span></div>
+        <div class="topbar-right">
+            <a class="brand-email" href="mailto:norbertou@gmail.com">Contacto: norbertou@gmail.com</a>
+            <div class="region-badge">GRANADA & PROVINCIA</div>
+        </div>
+        <div class="activity-hint" id="macro-warning" style="display:none;">La información macrosísmica está temporalmente incompleta; puede haber eventos sentidos en Granada aún no mostrados.</div>
     </header>
 
-    <div class="title-section">
-        <h1>La tierra bajo observación</h1>
-        <p>Cobertura oficial IGN | Cobertura regional activa</p>
+    <!-- 1. REGISTRO DE EVENTOS: BLOQUE PRINCIPAL -->
+    <div class="register-card">
+        <div class="register-header">
+            <div>
+                <div class="subtitle">REGISTRO</div>
+                <h3 style="margin: 2px 0 0 0; font-size: 1.3rem;">Últimos eventos</h3>
+                <div class="activity-hint" id="activity-24h" style="display:none;"></div>
+            </div>
+            <div class="badge-count" id="results-count">-- resultados</div>
+            <button class="ems-btn" id="ems-btn" type="button">ℹ Intensidad EMS</button>
+            <button class="info-btn" id="info-btn" type="button">ℹ Información</button>
+        </div>
+
+        <div class="ems-legend" id="ems-legend" style="display:none;">
+            <div><strong>Intensidad no es lo mismo que magnitud.</strong> La magnitud mide la energía liberada en el origen (única por terremoto). La intensidad mide los efectos en personas y edificios de un lugar concreto y puede variar según la localidad; el IGN la publica población por población.</div>
+            <div>Escala macrosísmica EMS-98 (I–XII), denominaciones oficiales:</div>
+            <div class="ems-legend-items" id="ems-legend-items"></div>
+            <div>Colores según los marcadores del visor oficial de intensidades del IGN (demostrados hasta grado X). Los grados superiores se muestran sin color oficial disponible.</div>
+        </div>
+
+        <div class="info-legend" id="info-legend" style="display:none;">
+            <div><strong>Cobertura de datos recientes</strong></div>
+            <div>Esta vista utiliza la información de “Últimos terremotos” del IGN, que recoge los eventos de los últimos 10 días con magnitud igual o superior a 1,5, además de terremotos de menor magnitud cuando han sido sentidos.</div>
+            <div>La aplicación muestra únicamente los relacionados con Granada/provincia según los criterios definidos.</div>
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>FECHA Y HORA (ESPAÑA)</th>
+                        <th title="Tiempo transcurrido entre eventos consecutivos">INTERVALO</th>
+                        <th>LOCALIZACIÓN</th>
+                        <th>MAG.</th>
+                        <th>PROFUNDIDAD</th>
+                        <th class="muted-col">COORDENADAS</th>
+                        <th class="int-col" title="Intensidad macrosísmica EMS (IGN)">INT.</th>
+                    </tr>
+                </thead>
+                <tbody id="events-table-body">
+                    <!-- Se rellena dinámicamente -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="status-card">
-        <strong>Última actualización:</strong> <span id="last-update">Cargando...</span> · IGN conectado
-    </div>
-
-    <!-- 1. BLOQUE DE RESUMEN RÁPIDO (REJILLA DE 4) -->
+    <!-- 2. BLOQUE DE RESUMEN RÁPIDO (REJILLA DE 4) -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="label">Seísmos este mes</div>
@@ -275,34 +432,6 @@
             <div class="label">Últimas 24 Horas</div>
             <div class="value" id="stat-24h">--</div>
             <div class="sub">actividad reciente</div>
-        </div>
-    </div>
-
-    <!-- 2. REGISTRO EN TABLA DESPLAZABLE -->
-    <div class="register-card">
-        <div class="register-header">
-            <div>
-                <div class="subtitle">REGISTRO</div>
-                <h3 style="margin: 2px 0 0 0; font-size: 1.3rem;">Últimos eventos</h3>
-            </div>
-            <div class="badge-count" id="results-count">-- resultados</div>
-        </div>
-
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th>FECHA Y HORA (ESPAÑA)</th>
-                        <th>LOCALIZACIÓN</th>
-                        <th>MAG.</th>
-                        <th>PROFUNDIDAD</th>
-                        <th>COORDENADAS</th>
-                    </tr>
-                </thead>
-                <tbody id="events-table-body">
-                    <!-- Se rellena dinámicamente -->
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -335,8 +464,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const map = L.map('map').setView([37.0, -3.6], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 19
         }).addTo(map);
 
@@ -358,29 +487,134 @@
         }
 
         async function loadData() {
+            if (window.__loading) return; // evita consultas concurrentes
+            window.__loading = true;
             try {
                 const res = await fetch('/api/earthquakes');
                 const data = await res.json();
-                const rawEvents = data.events || [];
+                const rawEvents = (data.events || []).slice().sort((a, b) => b.date.localeCompare(a.date));
 
-                document.getElementById('last-update').innerText = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
-                document.getElementById('results-count').innerText = `${rawEvents.length} resultados`;
+                // Firma ligera de todos los campos renderizados: si no cambian, solo refrescar el estado, sin re-render
+                const signature = JSON.stringify(rawEvents.map(e => [e.id, e.date, e.location, e.magnitude, e.depth, e.lat, e.lon, e.intensity_max, e.felt_granada]));
+                if (signature !== window.__lastSignature) {
+                    window.__lastSignature = signature;
+                    renderEvents(rawEvents);
+                }
 
-                // Calcular estadísticas para las 4 tarjetas superiores
-                let maxMag = 0;
-                let maxLoc = '--';
-                let sumDepth = 0;
-                let countDepth = 0;
-                let count24h = 0;
-                const now = new Date();
+                // Estado veraz y discreto: hora local de la consulta + fuente
+                const hora = formatFechaEspana(data.updated);
+                const fuente = data.status === 'live' ? 'IGN' : 'IGN (caché local)';
+                document.getElementById('last-update').innerText = `${hora} · Fuente: ${fuente}`;
+                const warning = document.getElementById('macro-warning');
+                if (warning) warning.style.display = data.macro_status === 'degraded' ? '' : 'none';
+            } catch (err) {
+                console.error("Error cargando seísmos:", err);
+                document.getElementById('last-update').innerText = 'No se pudo consultar · Fuente: IGN';
+            } finally {
+                window.__loading = false;
+            }
+        }
 
-                const tbody = document.getElementById('events-table-body');
-                tbody.innerHTML = '';
+        function formatDelta(ms) {
+            if (!(ms > 0)) return '—';
+            const min = Math.round(ms / 60000);
+            if (min < 60) return `+${min} min`;
+            const h = Math.floor(min / 60), m = min % 60;
+            if (h < 24) return m ? `+${h} h ${m} min` : `+${h} h`;
+            const d = Math.floor(h / 24), hh = h % 24;
+            return hh ? `+${d} d ${hh} h` : `+${d} d`;
+        }
 
-                const magBuckets = { '0–1': 0, '1–2': 0, '2–3': 0, '3–4': 0, '4+': 0 };
-                const depthBuckets = { '< 10 km': 0, '10–30 km': 0, '> 30 km': 0, 'Sin dato': 0 };
+        // ---- Intensidad EMS (solo datos oficiales del IGN) ----
+        const ROMANES = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        // Paleta derivada del muestreo de los marcadores oficiales del IGN (int01.png..int010.png,
+        // visor de intensidades: /web/resources/sismologia/tproximos/iconos/). Demostrada hasta X.
+        const EMS_COLORS = {'1.0': '#d8d8e8', '1.5': '#d8d8e8', '2.0': '#b8c8f8', '2.5': '#b8c8f8', '3.0': '#a8e8f8', '3.5': '#a8e8f8', '4.0': '#88f8f8', '4.5': '#88f8f8', '5.0': '#78f898', '5.5': '#78f898', '6.0': '#f8f808', '6.5': '#f8f808', '7.0': '#f8c808', '7.5': '#f8c808', '8.0': '#f89808', '8.5': '#f89808', '9.0': '#f80808', '9.5': '#f80808', '10.0': '#a80868'};
+        const EMS_DENOMINACIONES = [['I', 'No sentido'], ['II', 'Apenas sentido'], ['III', 'Débil'], ['IV', 'Ampliamente observado'], ['V', 'Fuerte'], ['VI', 'Ligeramente dañino'], ['VII', 'Dañino'], ['VIII', 'Muy dañino'], ['IX', 'Destructivo'], ['X', 'Muy destructivo'], ['XI', 'Devastador'], ['XII', 'Completamente devastador']];
+        function intRoman(valor) {
+            // Correspondencia demostrada con el visor oficial del IGN: 2.0->II, 2.5->II-III, 3.0->III...
+            if (Number.isNaN(valor)) return '';
+            const n = Math.floor(valor + 1e-9);
+            const frac = Math.round((valor - n) * 10);
+            if (frac === 5) return (ROMANES[n] || valor) + '-' + (ROMANES[n + 1] || '');
+            return ROMANES[n] || String(valor);
+        }
+        function romanNum(label) {
+            if (!label) return 0;
+            if (label.includes('-')) { const p = label.split('-'); return (ROMANES.indexOf(p[0]) + ROMANES.indexOf(p[1])) / 2; }
+            const i = ROMANES.indexOf(label);
+            return i >= 0 ? i : 0;
+        }
+        function intChip(literal, extraClass) {
+            if (!literal) return '';
+            const num = romanNum(literal);
+            // Clave normalizada a medio grado: 3 -> '3.0' (las claves de EMS_COLORS son '1.0'..'10.0')
+            const clave = (num % 1 === 0) ? num.toFixed(1) : String(num);
+            const color = EMS_COLORS[clave];
+            const cls = 'int-chip' + (extraClass ? ' ' + extraClass : '');
+            // Texto y borde derivados del color oficial muestreado (oscurecido), nunca negro fijo.
+            if (color) {
+                const oscuro = shadeHex(color, 0.45);
+                return `<span class="${cls}" style="background:${color};color:${oscuro};border:1px solid ${shadeHex(color, 0.6)};" title="Intensidad EMS (IGN)">${literal}</span>`;
+            }
+            return `<span class="${cls} neutral">${literal}</span>`;
+        }
+        function shadeHex(hex, factor) {
+            // Mezcla el color con negro según factor (0-1): deriva texto/borde del color oficial.
+            const n = parseInt(hex.slice(1), 16);
+            const r = Math.round(((n >> 16) & 255) * factor);
+            const g = Math.round(((n >> 8) & 255) * factor);
+            const b = Math.round((n & 255) * factor);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        function locsPanel(e) {
+            const locs = Array.isArray(e.felt_localities) ? e.felt_localities : [];
+            const gr = locs.filter(l => l.province === 'GR');
+            const otras = locs.filter(l => l.province !== 'GR');
+            let html = '<div class="locs-panel"><div class="locs-title">Localidades de Granada (IGN)</div>';
+            const grupos = {};
+            gr.forEach(l => { (grupos[l.intensity] = grupos[l.intensity] || []).push(l); });
+            Object.keys(grupos).sort((a, b) => romanNum(b) - romanNum(a)).forEach(k => {
+                html += `<div class="locs-int">${intChip(k)} ` + grupos[k].map(l => `<span class="loc-item">${l.name}</span>`).join('· ') + '</div>';
+            });
+            if (otras.length) {
+                html += '<div class="locs-subtitle">Otras provincias (IGN)</div>';
+                const porProv = {};
+                otras.forEach(l => { (porProv[l.province] = porProv[l.province] || []).push(l); });
+                Object.keys(porProv).sort().forEach(p => {
+                    html += `<div class="locs-int">${p}: ` + porProv[p].map(l => `<span class="loc-item">${l.name}</span>`).join(' · ') + '</div>';
+                });
+            }
+            return html + '</div>';
+        }
 
-                rawEvents.forEach(ev => {
+        function renderEvents(rawEvents) {
+            let maxMag = 0;
+            let maxLoc = '--';
+            let sumDepth = 0;
+            let countDepth = 0;
+            let count24h = null;
+            const now = new Date();
+
+            const tbody = document.getElementById('events-table-body');
+            tbody.innerHTML = '';
+
+            const magBuckets = { '0–1': 0, '1–2': 0, '2–3': 0, '3–4': 0, '4+': 0 };
+            const depthBuckets = { '< 10 km': 0, '10–30 km': 0, '> 30 km': 0, 'Sin dato': 0 };
+
+            // Resumen de actividad reciente: solo si el registro cubre las últimas 24 h
+            // (el feed IGN no garantiza exhaustividad completa; se indica como referencia)
+            const oldest = rawEvents.length ? new Date(rawEvents[rawEvents.length - 1].date) : null;
+            if (oldest && !Number.isNaN(oldest.getTime()) && (now - oldest) >= 24 * 3600 * 1000) {
+                count24h = rawEvents.filter(ev => ev.date && (now - new Date(ev.date)) <= 24 * 3600 * 1000).length;
+                const hint = document.getElementById('activity-24h');
+                hint.innerText = `${count24h} evento${count24h === 1 ? '' : 's'} en las últimas 24 h (según registro IGN)`;
+                hint.style.display = '';
+            } else {
+                document.getElementById('activity-24h').style.display = 'none';
+            }
+
+            rawEvents.forEach((ev, idx) => {
                     const mag = parseFloat(ev.magnitude) || 0;
                     const depth = ev.depth !== undefined && ev.depth !== null && ev.depth !== 'No disponible' ? parseFloat(ev.depth) : null;
                     const dateFormatted = formatFechaEspana(ev.date);
@@ -400,14 +634,6 @@
                         countDepth++;
                     }
 
-                    // Métrica 24 Horas
-                    if (ev.date) {
-                        const evDate = new Date(ev.date);
-                        if ((now - evDate) <= 24 * 3600 * 1000) {
-                            count24h++;
-                        }
-                    }
-
                     // Buckets Magnitud
                     if (mag < 1) magBuckets['0–1']++;
                     else if (mag < 2) magBuckets['1–2']++;
@@ -421,16 +647,47 @@
                     else if (depth <= 30) depthBuckets['10–30 km']++;
                     else depthBuckets['> 30 km']++;
 
-                    // Fila Tabla
+                    // Δ: tiempo transcurrido respecto al evento consecutivo anterior (siempre positivo)
+                    // Tabla ordenada de más reciente a más antiguo: el evento idx es posterior al idx+1
+                    let deltaCell = '<td class="delta">—</td>';
+                    if (idx < rawEvents.length - 1) {
+                        const t = new Date(ev.date).getTime();
+                        const prev = new Date(rawEvents[idx + 1].date).getTime();
+                        if (t > prev) deltaCell = `<td class="delta">${formatDelta(t - prev)}</td>`;
+                    }
+
+                    // Datos macrosísmicos EMS (solo si el .macro del IGN es válido)
+                    const intRom = ev.macro_state === 'valid' && ev.intensity_max ? intRoman(parseFloat(ev.intensity_max)) : '';
+                    const locs = Array.isArray(ev.felt_localities) ? ev.felt_localities : [];
+                    const grLocs = locs.filter(l => l.province === 'GR');
+                    const sentidoFuera = !ev.in_granada && ev.felt_granada;
+
+                    // Fila Tabla (la más reciente lleva una ligera diferenciación visual)
                     const tr = document.createElement('tr');
+                    if (idx === 0) tr.className = 'latest';
+                    const extras = [];
+                    if (sentidoFuera) extras.push('<span class="sentido-chip">Sentido en Granada</span>');
+                    if (grLocs.length) extras.push(`<span class="locs-badge" data-evid="${ev.id}">Sentido en ${grLocs.length} localidades de Granada ▾</span>`);
+                    if (intRom) extras.push(intChip(intRom, 'loc-mobile-int'));
                     tr.innerHTML = `
-                        <td>${dateFormatted}</td>
-                        <td><strong>${loc}</strong></td>
+                        <td>${dateFormatted}${idx === 0 ? ' <span class="latest-tag">· más reciente</span>' : ''}</td>
+                        ${deltaCell}
+                        <td><strong>${loc}</strong>${extras.length ? `<span class="loc-extra">${extras.join('')}</span>` : ''}</td>
                         <td class="mag-highlight">${mag.toFixed(1)}</td>
                         <td>${depth !== null ? depth + ' km' : 'No disponible'}</td>
-                        <td style="color: var(--text-sub);">${lat.toFixed(2)}, ${lon.toFixed(2)}</td>
+                        <td class="muted">${lat.toFixed(2)}, ${lon.toFixed(2)}</td>
+                        <td class="int-col" ${ev.macro_state === 'valid' && ev.intensity_max ? `title="Int. máx. IGN: ${ev.intensity_max}"` : ''}>${intChip(intRom)}</td>
                     `;
                     tbody.appendChild(tr);
+
+                    // Fila expandible con las localidades donde se sintió (según IGN)
+                    if (grLocs.length) {
+                        const trLocs = document.createElement('tr');
+                        trLocs.className = 'locs-row';
+                        trLocs.style.display = 'none';
+                        trLocs.innerHTML = `<td colspan="7">${locsPanel(ev)}</td>`;
+                        tbody.appendChild(trLocs);
+                    }
 
                     // Marker
                     if (lat && lon) {
@@ -444,17 +701,14 @@
                 });
 
                 // Asignar a tarjetas superiores
-                document.getElementById('stat-count').innerText = rawEvents.length;
-                document.getElementById('stat-max').innerText = maxMag > 0 ? maxMag.toFixed(1) : '--';
-                document.getElementById('stat-max-loc').innerText = maxLoc;
-                document.getElementById('stat-depth').innerText = countDepth > 0 ? (sumDepth / countDepth).toFixed(1) : '--';
-                document.getElementById('stat-24h').innerText = count24h;
+            document.getElementById('results-count').innerText = `${rawEvents.length} resultados`;
+            document.getElementById('stat-count').innerText = rawEvents.length;
+            document.getElementById('stat-max').innerText = maxMag > 0 ? maxMag.toFixed(1) : '--';
+            document.getElementById('stat-max-loc').innerText = maxLoc;
+            document.getElementById('stat-depth').innerText = countDepth > 0 ? (sumDepth / countDepth).toFixed(1) : '--';
+            document.getElementById('stat-24h').innerText = count24h !== null ? count24h : '--';
 
-                renderCharts(magBuckets, depthBuckets);
-
-            } catch (err) {
-                console.error("Error cargando seísmos:", err);
-            }
+            renderCharts(magBuckets, depthBuckets);
         }
 
         function renderCharts(magData, depthData) {
@@ -509,6 +763,30 @@
         }
 
         loadData();
+        // Desplegable de localidades sentidas (delegado: sobrevive a re-renderizados del tbody)
+        document.getElementById('events-table-body').addEventListener('click', (ev) => {
+            const badge = ev.target.closest('.locs-badge');
+            if (!badge) return;
+            const fila = badge.closest('tr');
+            const panel = fila.nextElementSibling;
+            if (panel && panel.classList.contains('locs-row')) {
+                const oculto = panel.style.display === 'none';
+                panel.style.display = oculto ? '' : 'none';
+                badge.textContent = oculto ? badge.textContent.replace('▾', '▴') : badge.textContent.replace('▴', '▾');
+            }
+        });
+        // Leyenda EMS: intensidad vs magnitud, denominaciones oficiales y colores demostrados (I–X)
+        document.getElementById('ems-btn').addEventListener('click', () => {
+            const panel = document.getElementById('ems-legend');
+            panel.style.display = panel.style.display === 'none' ? '' : 'none';
+        });
+        document.getElementById('ems-legend-items').innerHTML = EMS_DENOMINACIONES.map(([grado, nombre]) => `<div class="ems-item">${intChip(grado)}<span class="loc-item">${nombre}</span></div>`).join('');
+        document.getElementById('info-btn').addEventListener('click', () => {
+            const panel = document.getElementById('info-legend');
+            panel.style.display = panel.style.display === 'none' ? '' : 'none';
+        });
+        // Autoactualización cada 3 minutos; loadData evita consultas concurrentes y re-render si no hay cambios
+        setInterval(loadData, 180000);
     </script>
 </body>
 </html>

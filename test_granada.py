@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import app as appmod
@@ -221,8 +222,9 @@ class TestMacroFetch(unittest.TestCase):
             status_code = 404
         client = mock.AsyncMock()
         client.get = mock.AsyncMock(return_value=R())
+        fecha_reciente = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()  # evento <24 h (determinista)
         async def escenario():
-            return await fetch_macro(client, 'es2026eeee', '2026-09-27T10:00:00+00:00')  # evento reciente (<24 h)
+            return await fetch_macro(client, 'es2026eeee', fecha_reciente)
         result = asyncio.run(escenario())
         client.get.assert_called_once()  # TTL 15 min superado -> reconsulta
         self.assertEqual(result['state'], 'unavailable')
